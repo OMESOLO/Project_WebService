@@ -16,7 +16,7 @@
                 <div class="col-sm-12 col-md-10 col-lg-8">
                     <div class="form-floating mb-3">
                         <IftaLabel>
-                            <InputText id="password" v-model="password" style="width: 100%" variant="filled" />
+                            <Password id="password" v-model="password" toggleMask style="width: 100%" inputClass="w-100" />
                             <label for="password">Password</label>
                         </IftaLabel>
                     </div>
