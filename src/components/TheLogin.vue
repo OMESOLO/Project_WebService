@@ -35,14 +35,13 @@
             </form>
         </div>
     </div>
-    <!-- ส่วนแสดงสถานะ จากการตอบกลับของ Backend -->
 </template>
 
 <script>
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
-import { useToast } from 'primevue/usetoast'; // ✅ นำเข้า useToast() ถูกต้อง
+import { useToast } from 'primevue/usetoast'; 
 import { EventBus } from '../event-bus';
 axios.defaults.withCredentials = true;
 
@@ -55,12 +54,12 @@ export default {
             login: null,
             token: null,
             decodedToken: null,
-            toast: null // ✅ เก็บ useToast() ในตัวแปร
+            toast: null 
         };
     },
     mounted() {
         this.getCookie();
-        this.toast = useToast(); // ✅ ใช้ useToast() ได้แล้ว
+        this.toast = useToast(); 
     },
     methods: {
         async handleSubmit() {
@@ -78,7 +77,6 @@ export default {
                     await this.chkCart();
                     this.$router.push('/pagemember');
 
-                    // ✅ Toast แจ้งเตือนเข้าสู่ระบบสำเร็จ
                     this.toast.add({
                         severity: 'success',
                         summary: 'เข้าสู่ระบบสำเร็จ',
@@ -86,7 +84,6 @@ export default {
                         life: 3000
                     });
                 } else {
-                    // ✅ Toast แจ้งเตือนเข้าสู่ระบบล้มเหลว
                     this.toast.add({
                         severity: 'error',
                         summary: 'เข้าสู่ระบบล้มเหลว',
