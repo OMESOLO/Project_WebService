@@ -1,5 +1,6 @@
 <template>
     <div class="row mt-5">
+        <Toast />
         <div class="col-sm-12 col-md-6 col-lg-6 mb-5">
             <img src="../assets/LogoSRC.png" alt="" width="80%" />
         </div>
@@ -35,56 +36,74 @@
         </div>
     </div>
     <!-- ส่วนแสดงสถานะ จากการตอบกลับของ Backend -->
-    <p v-if="backendMessage == 'success'" class="alert alert-success">เข้าระบบสำเร็จ {{ backendMessage }}</p>
-    <p v-else-if="backendMessage == 'fail'" class="alert alert-danger">เข้าระบบผิดพลาด {{ backendMessage }}</p>
 </template>
 
 <script>
-import axios from 'axios'; //import axios มาใช้งาน
-import Cookies from 'js-cookie'; //imporo js-cookie มาใช้งาน
+import axios from 'axios';
+import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
-import { EventBus } from '../event-bus'; //import event-bus มาใช้งาน
+import { useToast } from 'primevue/usetoast'; // ✅ นำเข้า useToast() ถูกต้อง
+import { EventBus } from '../event-bus';
 axios.defaults.withCredentials = true;
+
 export default {
     name: 'TheLogin',
     data() {
         return {
-            //กำหนดตัวแปรที่ใช้งานกับ Template และค่าเริ่มต้น
             loginname: null,
             password: null,
             login: null,
-            // กำหนดอ่าน Token
             token: null,
             decodedToken: null,
-            backendMessage: null // กำหนดตัวแปรสำหรับอ่านสถานะการตอบกลับจา�� Backend
+            toast: null // ✅ เก็บ useToast() ในตัวแปร
         };
     },
     mounted() {
-        this.getCookie(); //เมื่อเริ่ม Component ให้เรียก methods getCookie()
+        this.getCookie();
+        this.toast = useToast(); // ✅ ใช้ useToast() ได้แล้ว
     },
     methods: {
         async handleSubmit() {
-            // Function
             let members = {
-                // กำหนดค่า
                 loginname: this.loginname,
                 password: this.password
             };
+
             try {
-                // Request POST Method
                 const response = await axios.post(`http://localhost:3000/members/login`, members);
                 this.login = response.data.login;
-                this.backendMessage = this.login ? 'success' : 'fail';
-                // ย้ายหน้าถ้า login สำเร็จ
+
                 if (this.login) {
-                    // event bus เมื่อ Login สำเร็จส่งสัญญานชื่อ login_ok วิ่งไปตาม bus
                     EventBus.emit('login_ok');
                     await this.chkCart();
                     this.$router.push('/pagemember');
+
+                    // ✅ Toast แจ้งเตือนเข้าสู่ระบบสำเร็จ
+                    this.toast.add({
+                        severity: 'success',
+                        summary: 'เข้าสู่ระบบสำเร็จ',
+                        detail: 'คุณเข้าสู่ระบบเรียบร้อยแล้ว',
+                        life: 3000
+                    });
+                } else {
+                    // ✅ Toast แจ้งเตือนเข้าสู่ระบบล้มเหลว
+                    this.toast.add({
+                        severity: 'error',
+                        summary: 'เข้าสู่ระบบล้มเหลว',
+                        detail: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
+                        life: 3000
+                    });
                 }
             } catch (err) {
                 console.log(err);
-                this.backendMessage = 'fail';
+
+                // ✅ Toast แจ้งเตือนเมื่อเกิดข้อผิดพลาด
+                this.toast.add({
+                    severity: 'error',
+                    summary: 'เกิดข้อผิดพลาด',
+                    detail: 'ไม่สามารถเข้าสู่ระบบได้ กรุณาลองใหม่อีกครั้ง',
+                    life: 3000
+                });
             }
         },
         getCookie() {
@@ -95,26 +114,15 @@ export default {
                     return;
                 }
                 this.decodedToken = jwtDecode(this.token);
-                if (this.decodedToken != null) this.$router.push('/pagemember');
+                if (this.decodedToken) this.$router.push('/pagemember');
             } catch (err) {
                 console.error(`fail decode token ${err}`);
             }
         },
-
         async chkCart() {
-            //เมื่อ Login สำเร็จให้ตรวจสอบว่ามีตะกร้าค้างอยู่หรือเปล่า
-            console.log('chkCart');
-            let members = {
-                // กำหนดค่า
-                memEmail: this.loginname
-            };
             try {
-                // Request POST Method
-                const response = await axios.post(`http://localhost:3000/carts/chkcart`, members);
-                let cartId = response.data.cartId;
-                // ส่งสัญญานหลังติดต่อ Backend
-                EventBus.emit('cartdtlOK', { id: cartId });
-                console.log(cartId);
+                const response = await axios.post(`http://localhost:3000/carts/chkcart`, { memEmail: this.loginname });
+                EventBus.emit('cartdtlOK', { id: response.data.cartId });
             } catch (err) {
                 console.log(err);
             }
