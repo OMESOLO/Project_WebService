@@ -93,12 +93,6 @@ watch(stext, (newVal) => {
 </script>
 
 <style>
-img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-}
-
 .pi-star-fill {
     font-size: 0.75rem;
 }
