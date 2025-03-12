@@ -1,73 +1,105 @@
 <template>
-    <form @submit.prevent="searchProduct()">
-      <div class="row">
-        <div class="h1 col-md-6 col-sm-12text-danger">ผลิตภันฑ์ของเรา</div>
-        <div class="col-md-4 col-sm-6">
-          <input type="text" class="form-control" v-model="stext" />
-        </div>
-        <div class="col">
-          <button class="btn btn-primary" type="submit" @click="searchProduct()">ค้นหา</button>
-        </div>
-      </div>
-    </form>
-    <div class="row">
-      <div v-for="(pd, pdId) in products" :key="pdId" class="col-lg-4 col-md-6 col-sm-12">
-        <div class="card mt-3" style="width: 18rem; background-color: #eeeeee">
-          <img :src="`http://localhost:3000/img_pd/${pd.pdId}.jpg`" class="card-img-top p-2" alt="" />
-          <div class="card-body">
-            <h5 class="card-title">{{ pd.pdName }}</h5>
-            <p class="card-text">{{ pd.brand?.brandName }} - {{ pd.pdPrice }}</p>
-            <!-- <a href="#" class="btn btn-primary">Go somewhere</a> -->
-            <!-- กำหนด router-link แสดง Component ProductShow -->
-            <!-- จะมีการส่งParameter ไปกับ router-link ด้วยจะต้องใช้ :to และกำหนด params -->
-            <!-- และส่งเป็นลักษณะชุดข้อมูล key:value -->
-            <!-- สามารถส่ง parameter ได้หลายตัวโดยระบุเป็นชุดข้อมูลซ้่อนเข้าไปได้ -->
-            <router-link
-              :to="{ name: 'ProductShow', params: { pdId: pd.pdId } }"
-              style="text-decoration: none"
-            >
-              <div class="btn btn-primary">ดูรายละเอียด</div>
-            </router-link>
-          </div>
-        </div>
-      </div>
+    <div class="card p-4">
+        <form @submit.prevent="searchProduct" class="row align-items-center mb-3">
+            <div class="col-md-6">
+                <h1 class="text-primary">ผลิตภัณฑ์ของเรา</h1>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <InputText v-model="stext" placeholder="ค้นหาสินค้า..." class="w-100 p-inputtext-lg form-control" />
+            </div>
+            <div class="col d-flex gap-2">
+                <Button icon="pi pi-search" label="ค้นหา" severity="success" @click="searchProduct" />
+                <Button icon="pi pi-filter-slash" label="ล้าง" variant="outlined" @click="clearSearch" />
+            </div>
+        </form>
+
+        <DataView :value="products" paginator :rows="5">
+            <template #list="slotProps">
+                <div class="container">
+                    <div v-for="(item, index) in slotProps.items" :key="index">
+                        <div class="row align-items-center border-bottom py-3">
+                            <div class="col-md-2">
+                                <div class="position-relative">
+                                    <img class="rounded w-100 shadow-sm" :src="`http://localhost:3000/img_pd/${item.pdId}.jpg`" :alt="item.pdName" style="max-width: 80px; height: 80px; object-fit: cover" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <span class="text-muted text-xs">{{ item.brand?.brandName }}</span>
+                                <div class="text-sm font-weight-bold mt-1">{{ item.pdName }}</div>
+                                <div class="d-flex align-items-center mt-1">
+                                    <span class="text-xs font-weight-bold">{{ item.rating }}</span>
+                                    <i class="pi pi-star-fill text-warning ml-1"></i>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 text-end">
+                                <span class="text-sm font-weight-bold text-success">{{ item.pdPrice }} บาท</span>
+                                <div class="d-flex justify-content-end gap-2 mt-2">
+                                    <router-link :to="{ name: 'ProductShow', params: { pdId: item.pdId } }" class="btn btn-primary btn-sm"> <i class="pi pi-eye"></i> ดูรายละเอียดสินค้า </router-link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </DataView>
     </div>
-  </template>
-  
-  <script>
-  import axios from "axios";
-  export default {
-    name: "PageProduct",
-    data() {
-      return {
-        products: [],
-        stext: "",
-      };
-    },
-    mounted() {
-      // fetch (`http://localhost:3000/products`)
-      // .then(res=>res.json())
-      // .then(data=>this.products=data)
-      // .catch(err=>console.log(err.message))
-      axios
-        .get(`http://localhost:3000/products/ten`)
-        .then((res) => {
-          this.products = res.data;
-        })
-        .catch((err) => console.log(err.message));
-    },
-    methods: {
-      searchProduct() {
-        axios
-          .get(`http://localhost:3000/products/search/${this.stext}`)
-          .then((res) => {
-            this.products = res.data;
-          })
-          .catch((err) => console.log(err.message));
-      },
-    },
-  };
-  </script>
-  
-  <style></style>
-  
+</template>
+
+<script setup>
+import axios from 'axios';
+import { onMounted, ref, watch } from 'vue';
+
+const products = ref([]);
+const stext = ref('');
+
+onMounted(() => {
+    fetchProducts();
+});
+
+const fetchProducts = async () => {
+    try {
+        const res = await axios.get('http://localhost:3000/products/ten');
+        products.value = res.data;
+    } catch (err) {
+        console.error('Error loading products:', err);
+    }
+};
+
+const searchProduct = async () => {
+    if (!stext.value.trim()) {
+        fetchProducts();
+        return;
+    }
+    try {
+        const res = await axios.get(`http://localhost:3000/products/search/${stext.value}`);
+        products.value = res.data;
+    } catch (err) {
+        console.error('Error searching products:', err);
+    }
+};
+
+const clearSearch = () => {
+    stext.value = '';
+    fetchProducts();
+};
+
+watch(stext, (newVal) => {
+    if (!newVal.trim()) {
+        fetchProducts();
+    }
+});
+</script>
+
+<style>
+img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+}
+
+.pi-star-fill {
+    font-size: 0.75rem;
+}
+</style>

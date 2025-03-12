@@ -9,7 +9,7 @@
                 <div class="col-sm-12 col-md-10 col-lg-8">
                     <div class="form-floating mb-3">
                         <IftaLabel>
-                            <InputText id="loginname" v-model="loginname" style="width: 100%" variant="filled" />
+                            <InputText id="loginname" v-model="loginname" style="width: 105%" variant="filled" />
                             <label for="loginname">Email</label>
                         </IftaLabel>
                     </div>
@@ -17,7 +17,7 @@
                 <div class="col-sm-12 col-md-10 col-lg-8">
                     <div class="form-floating mb-3">
                         <IftaLabel>
-                            <Password id="password" v-model="password" toggleMask style="width: 100%" inputClass="w-100" />
+                            <Password id="password" v-model="password" toggleMask :feedback="false" style="width: 105%" inputClass="w-100" />
                             <label for="password">Password</label>
                         </IftaLabel>
                     </div>
@@ -41,7 +41,7 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
-import { useToast } from 'primevue/usetoast'; 
+import { useToast } from 'primevue/usetoast';
 import { EventBus } from '../event-bus';
 axios.defaults.withCredentials = true;
 
@@ -54,12 +54,12 @@ export default {
             login: null,
             token: null,
             decodedToken: null,
-            toast: null 
+            toast: null
         };
     },
     mounted() {
         this.getCookie();
-        this.toast = useToast(); 
+        this.toast = useToast();
     },
     methods: {
         async handleSubmit() {
