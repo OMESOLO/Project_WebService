@@ -2,7 +2,7 @@
     <div class="row mt-5">
         <Toast />
         <div class="col-sm-12 col-md-6 col-lg-6 mb-5">
-            <img src="../assets/LogoSRC.png" alt="" width="80%" />
+            <Image src="https://primefaces.org/cdn/primevue/images/galleria/galleria10.jpg" alt="Image" width="250" />
         </div>
         <div class="col-sm-12 col-md-6 col-lg-6 mb3">
             <form @submit.prevent="handleSubmit()">
