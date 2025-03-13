@@ -1,177 +1,207 @@
 <template>
     <div v-for="(pd, pdId) in products" :key="pdId" class="mt-5">
-      <div class="row">
-        <div class="col-md-6 col-sm-12">
-          <div class="card mx-auto mb-3" style="width: 18rem">
-            <img
-              :src="`http://localhost:3000/img_pd/${pd.pdId}.jpg`"
-              alt=""
-              class="rounded shadow-sm"
-            />
-          </div>
+        <div class="row">
+            <div class="col-md-3 col-sm-11">
+                <Card class="mx-auto mb-3" style="width: 16rem">
+                    <template #content>
+                        <Image :src="`http://localhost:3000/img_pd/${pd.pdId}.jpg`" alt="Product Image" width="220" />
+                    </template>
+                </Card>
+            </div>
+
+            <div class="col-md-9 col-sm-12">
+                <Card>
+                    <template #content>
+                        <DataTable
+                            v-model:editingRows="editingRows"
+                            :value="[pd]"
+                            editMode="row"
+                            dataKey="pdId"
+                            @row-edit-save="onRowEditSave"
+                            tableStyle="min-width: 30rem"
+                            :pt="{
+                                table: { style: 'min-width: 50rem' },
+                                column: {
+                                    bodycell: ({ state }) => ({
+                                        style: state['d_editing'] && 'padding-top: 0.75rem; padding-bottom: 0.75rem'
+                                    })
+                                }
+                            }"
+                        >
+                            <Column field="pdId" header="รหัสสินค้า"></Column>
+                            <Column field="pdName" header="ชื่อสินค้า">
+                                <template #editor="{ data, field }">
+                                    <InputText v-model="data[field]" />
+                                </template>
+                            </Column>
+                            <Column field="pdPrice" header="ราคา">
+                                <template #body="{ data, field }">
+                                    {{ formatCurrency(data[field]) }}
+                                </template>
+                                <template #editor="{ data, field }">
+                                    <InputNumber v-model="data[field]" mode="currency" currency="THB" locale="th-TH" />
+                                </template>
+                            </Column>
+                            <Column field="brand.brandName" header="ยี่ห้อ">
+                                <template #body="slotProps">
+                                    {{ slotProps.data.brand ? slotProps.data.brand.brandName : '-' }}
+                                </template>
+                            </Column>
+                            <Column field="pdRemark" header="รายละเอียด">
+                                <template #editor="{ data, field }">
+                                    <InputText v-model="data[field]" />
+                                </template>
+                            </Column>
+                            <Column :rowEditor="true" style="width: 10%; min-width: 8rem" bodyStyle="text-align:center"> </Column>
+                        </DataTable>
+                    </template>
+                </Card>
+
+                <div class="mt-3">
+                    <Button label="ใส่ตะกร้า" icon="pi pi-shopping-cart" class="p-button-primary" @click="chkLogin()" />
+                </div>
+            </div>
         </div>
-        <div class="col-md-6 col-sm-12">
-          <table class="table">
-            <tbody>
-              <tr class="table-secondary">
-                <td>
-                  <h4>{{ pd.pdId }}</h4>
-                </td>
-                <td>
-                  <h4>{{ pd.pdName }}</h4>
-                </td>
-              </tr>
-              <tr>
-                <td><h5>ราคา</h5></td>
-                <td>
-                  <h5>{{ pd.pdPrice }}</h5>
-                </td>
-              </tr>
-              <tr>
-                <td><h5>ยี่ห้อ</h5></td>
-                <td>
-                  <h5>{{ pd.brand.brandName }}</h5>
-                </td>
-              </tr>
-              <tr>
-                <td><h5>รายละเอียด</h5></td>
-                <td>
-                  <h5>{{ pd.pdRemark }}</h5>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <!-- สร้างปุ่มเพื่อทำการนำสินค้าลงตะกร้า เรียก function chkLogin -->
-          <button class="btn btn-primary" @click="chkLogin()">
-            <i class="bi bi-cart lead"></i> ใส่ตะกร้า&nbsp;
-          </button>
-          <button class="btn btn-warning float-end">
-            <i class="bi bi-pencil-fill lead"></i> แก้ไข&nbsp;&nbsp;
-          </button>
-        </div>
-      </div>
     </div>
-  </template>
-  
-  <script>
-  import axios from "axios";
-  import Cookies from "js-cookie"; //imporo js-cookie มาใช้งาน
-  import { jwtDecode } from "jwt-decode"; //ใช้แทน jsonwebtoken เพราะ jsonwebtoken ไม่เข้ากับ Vue.js
-  import { EventBus } from "../event-bus";
-  
-  axios.defaults.withCredentials = true;
-  export default {
-    name: "ProductShow",
-    data() {
-      return {
-        token: "",
-        decodedToken: null, //token ที่ถูกแกะแล้ว
-        memEmail: null,
-        cartId: null, //เพื่อตรวจสอบตะกร้า
-        products: [], //array เก็บข้อมูลสินค่า
-        id: null, // รหัสสินค้าที่ส่งมา
-      };
-    },
-  
-    mounted() {
-      // อ่านค่าจะ parameter ที่ส่งมาจาก routes
-      this.id = this.$route.params.pdId;
-      // ระบุ id ของสินค้าที่ต้องการ
-      // ระบุ Request ไปที่ Backend ตามที่ Backend กำหนด
-      axios
-        .get(`http://localhost:3000/products/${this.id}`)
-        .then((res) => {
-          this.products = res.data;
-        })
-        .catch((err) => {
-          console.error(err);
+</template>
+
+<script setup>
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
+import { useToast } from 'primevue/usetoast';
+import { onMounted, ref } from 'vue';
+import { EventBus } from '../event-bus';
+
+const toast = useToast();
+const products = ref([]);
+const id = ref(null);
+const token = ref('');
+const decodedToken = ref(null);
+const memEmail = ref(null);
+const cartId = ref(null);
+const editingRows = ref([]);
+
+onMounted(async () => {
+    id.value = window.location.pathname.split('/').pop();
+    try {
+        const res = await axios.get(`http://localhost:3000/products/${id.value}`);
+        if (Array.isArray(res.data)) {
+            products.value = res.data;
+        } else if (res.data) {
+            products.value = [res.data];
+        } else {
+            products.value = [];
+        }
+    } catch (err) {
+        console.error('Error fetching product:', err);
+        products.value = [];
+    }
+});
+
+const getCookie = async () => {
+    try {
+        token.value = await Cookies.get('token');
+        decodedToken.value = jwtDecode(token.value);
+        memEmail.value = decodedToken.value.memEmail;
+    } catch (err) {
+        console.error(`fail decode token ${err}`);
+    }
+};
+
+const chkLogin = async () => {
+    console.log('chkLogin');
+    await getCookie();
+    if (!memEmail.value) {
+        alert('ต้อง Login เข้าระบบก่อน');
+        return;
+    }
+    console.log('login แล้ว');
+    await chkCart();
+    if (!cartId.value) {
+        await addCart();
+    }
+    addCartDtl();
+};
+
+const chkCart = async () => {
+    console.log('chkCart');
+    try {
+        const response = await axios.post(`http://localhost:3000/carts/chkcart`, { memEmail: memEmail.value });
+        cartId.value = response.data.cartId;
+    } catch (err) {
+        console.log(err);
+    }
+};
+
+const addCart = async () => {
+    console.log('addCart');
+    try {
+        const response = await axios.post(`http://localhost:3000/carts/addcart`, { cusId: memEmail.value });
+        cartId.value = response.data.messageAddCart;
+    } catch (err) {
+        console.log(err);
+    }
+};
+
+const addCartDtl = async () => {
+    console.log('addCartDtl');
+    if (!products.value.length) {
+        console.error('No products found!');
+        return;
+    }
+    try {
+        await axios.post(`http://localhost:3000/carts/addcartdtl`, {
+            cartId: cartId.value,
+            pdId: id.value,
+            pdPrice: products.value[0]?.pdPrice ?? 0
         });
-    },
-    methods: {
-      async getCookie() {
-        try {
-          this.token = await Cookies.get("token"); //อ่านค่าจาก Cookies ที่ชื่อ token แล้วเอาใส่ตัวแปร token
-          // jwt-decode ไม่ใช้ secretkey แกะแต่ส่วน payload - ฝั่งBackend ที่ต้องการความเชื่อถือได้
-          this.decodedToken = jwtDecode(this.token);
-          this.memEmail = this.decodedToken.memEmail;
-        } catch (err) {
-          console.error(`fail decode token ${err}`);
-        }
-      },
-  
-      async chkLogin() {
-        console.log("chkLogin");
-        await this.getCookie(); //ตรวจสอบว่า Login แล้วหรือยัง
-        if (this.memEmail == null) {
-          alert("ต้อง Login เข้าระบบก่อน");
-          console.warn("ยังไม่ได้ login ");
-          return false; //ถ้ายังไม่ Login บอกให้ Login
-        }
-        console.log("login แล้ว");
-        await this.chkCart(); // ถ้า Login แล้วให้ตรวจสอบว่ามี Cart หรือยัง
-        if (this.cartId == null) {
-          await this.addCart(); // ถ้ายังไม่มีให้สร้างตะกร้า
-        }
-        this.addCartDtl(); // ถ้ามีตะกร้าแล้วให้เอาสินค้าใส่ตะกร้า
-      },
-  
-      async chkCart() {
-        console.log("chkCart");
-        let members = {
-          // กำหนดค่า
-          memEmail: this.memEmail,
+
+        EventBus.emit('cartdtlOK', { id: cartId.value });
+    } catch (err) {
+        console.log(err);
+    }
+};
+
+const updateProduct = async (updatedProduct) => {
+    try {
+        const payload = {
+            pdId: updatedProduct.pdId,
+            pdName: updatedProduct.pdName,
+            pdPrice: updatedProduct.pdPrice,
+            pdRemark: updatedProduct.pdRemark,
+            pdTypeId: updatedProduct.pdTypeId || null,
+            brandId: updatedProduct.brand?.brandId || null
         };
-        try {
-          // Request POST Method
-          const response = await axios.post(`http://localhost:3000/carts/chkcart`, members);
-          this.cartId = response.data.cartId;
-          console.log(this.cartId);
-        } catch (err) {
-          console.log(err);
-        }
-      },
-  
-      async addCart() {
-        console.log("addCard");
-        let customer = {
-          //1.สร้างชุดข้อมูลส่งไปให้ Backend POST
-          cusId: this.memEmail,
-        };
-        try {
-          //2.ส่ง Method Request POST
-          const response = await axios.post(`http://localhost:3000/carts/addcart`, customer);
-          // 3.รับค่า Response จาก Backend เพื่ีอแสดงผล
-          this.backendMessage = response.data.messageAddCart;
-          this.cartId = response.data.messageAddCart;
-          console.log(response.data);
-        } catch (err) {
-          console.log(err);
-        }
-      },
-  
-      async addCartDtl() {
-        console.log("addCartDtl");
-        let cartdtl = {
-          //1.สร้างชุดข้อมูลส่งไปให้ Backend POST
-          cartId: this.cartId,
-          pdId: this.id,
-          pdPrice: this.products[0].pdPrice,
-        };
-        try {
-          //2.ส่ง Method Request POST
-          const response = await axios.post(`http://localhost:3000/carts/addcartdtl`, cartdtl);
-  
-          // ส่งสัญญานหลังติดต่อ Backend
-          EventBus.emit("cartdtlOK", { id: this.cartId }); //***ตรงนี้ที่ Error ตอนบรรยาย
-          // 3.รับค่า Response จาก Backend เพื่ีอแสดงผล
-          this.backendMessage = response.data.messageAddCartDtl;
-          console.log(response.data);
-        } catch (err) {
-          console.log(err);
-        }
-      },
-    },
-  };
-  </script>
-  <style></style>
-  
+
+        await axios.put(`http://localhost:3000/products/${updatedProduct.pdId}`, payload);
+        console.log('Product updated successfully:', payload);
+        toast.add({
+            severity: 'success',
+            summary: 'อัปเดตสำเร็จ',
+            detail: `แก้ไขข้อมูลสินค้าสำเร็จ!`,
+            life: 3000
+        });
+    } catch (err) {
+        console.error('Error updating product:', err);
+        toast.add({
+            severity: 'error',
+            summary: 'อัปเดตไม่สำเร็จ',
+            detail: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
+            life: 3000
+        });
+    }
+};
+
+const onRowEditSave = (event) => {
+    let { newData, index } = event;
+    products.value[index] = newData;
+    updateProduct(newData);
+};
+
+const formatCurrency = (value) => {
+    return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(value);
+};
+</script>
+
+<style></style>

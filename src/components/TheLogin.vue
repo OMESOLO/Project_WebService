@@ -75,7 +75,7 @@ export default {
                 if (this.login) {
                     EventBus.emit('login_ok');
                     await this.chkCart();
-                    this.$router.push('/pagemember');
+                    this.$router.push('/');
 
                     this.toast.add({
                         severity: 'success',

@@ -20,7 +20,7 @@
                         <div class="row align-items-center border-bottom py-3">
                             <div class="col-md-2">
                                 <div class="position-relative">
-                                    <img class="rounded w-100 shadow-sm" :src="`http://localhost:3000/img_pd/${item.pdId}.jpg`" :alt="item.pdName" style="max-width: 80px; height: 80px; object-fit: cover" />
+                                    <Image :src="`http://localhost:3000/img_pd/${item.pdId}.jpg`" :alt="item.pdName" class="rounded w-100 shadow-sm" preview style="max-width: 80px; height: 80px; object-fit: cover" />
                                 </div>
                             </div>
 
