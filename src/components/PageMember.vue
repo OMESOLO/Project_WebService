@@ -1,130 +1,125 @@
 <template>
-    <div class="row">
-      <div class="col-md-6 col-sm-12">
-        <h3 class="mt-5 text-end">{{ memEmail }}</h3>
-        <h5 class="text-end">{{ memName }}</h5>
-      </div>
-      <div class="col-md-6 col-sm-12">
-        <div class="card mt-5" style="width: 18rem" v-if="imageExists">
-          <img
-            :src="`http://localhost:3000/img_mem/${memEmail}.jpg?timestamp=${imageTimestamp}`"
-            :alt="memEmail"
-          />
+    <div class="container">
+        <div class="row justify-content-center align-items-center gap-3">
+            <div class="col-md-5 col-sm-12 d-flex justify-content-center">
+                <Card class="mt-5 shadow-lg text-center p-4" style="width: 24rem; border-radius: 15px">
+                    <template #title> โปรไฟล์ของฉัน </template>
+                    <template #content>
+                        <div class="d-flex flex-column align-items-center">
+                            <div class="position-relative">
+                                <img :src="imageUrl" :alt="memEmail" class="rounded-circle shadow-sm profile-img" />
+                                <div class="edit-icon" @click="triggerFileInput">
+                                    <i class="pi pi-pencil"></i>
+                                </div>
+                                <input type="file" ref="fileInput" class="d-none" accept="image/*" @change="onFileChange" />
+                            </div>
+
+                            <div class="mt-3 w-100">
+                                <div class="mb-3 text-start">
+                                    <label for="email" class="form-label">Email</label>
+                                    <InputText id="email" v-model="memEmail" class="form-control" disabled />
+                                </div>
+                                <div class="mb-3 text-start">
+                                    <label for="name" class="form-label">Name</label>
+                                    <InputText id="name" v-model="memName" class="form-control" disabled />
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </Card>
+            </div>
         </div>
-        <div class="card mt-5" style="width: 18rem" v-else>
-          <img :src="`http://localhost:3000/img_mem/default.jpg`" :alt="memEmail" />
-        </div>
-      </div>
+        <Toast />
     </div>
-    <form @submit.prevent="uploadFile()">
-      <div class="row g-3 mt-3">
-        <div class="col-md-6 col-sm-12"></div>
-        <div class="col-auto">
-          <input class="form-control" type="file" id="formFile" @change="onFileChange" required />
-        </div>
-        <div class="col-auto">
-          <button class="btn btn-primary" type="submit">Upload</button>
-        </div>
-      </div>
-      <div class="row g-3 mt-3">
-        <div class="col-md-6 col-sm-12"></div>
-        <div class="col-auto">
-          <div class="alert alert-success" v-if="fileMessage != 'fail' && fileMessage != null">
-            {{ fileMessage }}
-          </div>
-        </div>
-        <div class="col-auto"></div>
-      </div>
-    </form>
-  </template>
-  
-  <script>
-  import Cookies from "js-cookie"; //imporo js-cookie มาใช้งาน
-  import { jwtDecode } from "jwt-decode"; //ใช้แทน jsonwebtoken เพราะ jsonwebtoken ไม่เข้ากับ Vue.js
-  import axios from "axios";
-  
-  axios.defaults.withCredentials = true;
-  
-  export default {
-    name: "PageMember",
-    data() {
-      return {
-        token: "",
-        decodedToken: null, //token ที่ถูกแกะแล้ว
-        memEmail: null,
-        memName: null,
-        dutyId: null,
-        imageExists: false,
-        fileMessage: null,
-        file: null,
-        imageTimestamp: Date.now(),
-      };
-    },
-    mounted() {
-      this.getCookie(); //เมื่อเริ่ม Component ให้เรียก methods getCookie()
-      this.checkImage();
-      
-    },
-    methods: {
-      getCookie() {
-        try {
-          this.token = Cookies.get("token"); //อ่านค่าจากCookies ชื่อtoken แล้วเอาใส่ตัวแปร token
-          // jwt-decode ไม่ใช้ secretkey แกะแต่ส่วน payload - ฝั่งBackend ที่ต้องการความเชื่อถือได้
-          this.decodedToken = jwtDecode(this.token);
-          console.log(`MainMenu-->${this.decodedToken}`);
-          this.memEmail = this.decodedToken.memEmail;
-          this.memName = this.decodedToken.memName;
-          this.dutyId = this.decodedToken.dutyId;
-        } catch (err) {
-          console.error(`fail decode token ${err}`);
-        }
-      },
-  
-      checkImage() {
-        const image = new Image();
-        image.src = `http://localhost:3000/img_mem/${this.memEmail}.jpg`;
-        image.onload = () => {
-          // รูปภาพโหลดสำเร็จ
-          this.imageExists = true;
-        };
-        image.onerror = () => {
-          // รูปภาพไม่สามารถโหลดได้
-          this.imageExists = false;
-        };
-      },
-  
-      onFileChange(e) {
-        this.file = e.target.files[0];
-      },
-  
-      async uploadFile() {
-        if (!this.file) {
-          this.fileMessage = "เลือก File ก่อน";
-          return;
-        }
-        // กำหนดค่า Form เพื่อ POST
-        const formData = new FormData();
-        formData.append("memEmail", this.memEmail);
-        formData.append("file", this.file);
-        // กำหนด endpoint และกำหนด Header ว่าเป็นการส่ง file
-        try {
-          const response = await axios.post("http://localhost:3000/members/uploadImg", formData, {
-            // กำหนด Header Message
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          });
-          this.fileMessage = response.data.message;
-          // ให้ทำการตรวจสอบ image อีกครั้ง
-          this.checkImage();
-          this.imageTimestamp = Date.now();
-        } catch (err) {
-          this.fileMessage = "fail";
-        }
-      },
-    },
-  };
-  </script>
-  
-  <style></style>
-  
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
+import { useToast } from 'primevue/usetoast';
+import Toast from 'primevue/toast';
+
+const toast = useToast();
+const fileInput = ref(null);
+const memEmail = ref(null);
+const memName = ref(null);
+const imageTimestamp = ref(Date.now());
+
+const imageUrl = ref(`http://localhost:3000/img_mem/default.jpg`);
+
+onMounted(() => {
+    getCookie();
+});
+
+const getCookie = () => {
+    try {
+        const token = Cookies.get('token');
+        const decodedToken = jwtDecode(token);
+        memEmail.value = decodedToken.memEmail;
+        memName.value = decodedToken.memName;
+        imageUrl.value = `http://localhost:3000/img_mem/${memEmail.value}.jpg?timestamp=${imageTimestamp.value}`;
+    } catch (err) {
+        console.error(`Fail to decode token: ${err}`);
+    }
+};
+
+const triggerFileInput = () => {
+    if (fileInput.value) {
+        fileInput.value.click();
+    }
+};
+
+const onFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('memEmail', memEmail.value);
+    formData.append('file', file);
+
+    try {
+        await axios.post('http://localhost:3000/members/uploadImg', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+
+        imageTimestamp.value = Date.now();
+        imageUrl.value = `http://localhost:3000/img_mem/${memEmail.value}.jpg?timestamp=${imageTimestamp.value}`;
+
+        toast.add({ severity: 'success', summary: 'อัปโหลดสำเร็จ', life: 3000 });
+    } catch (err) {
+        toast.add({ severity: 'error', summary: 'อัปโหลดล้มเหลว', life: 3000 });
+    }
+};
+</script>
+
+<style>
+.profile-img {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    border: 5px solid #ddd;
+}
+
+.edit-icon {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: #007bff;
+    color: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: background 0.3s ease;
+}
+
+.edit-icon:hover {
+    background: #0056b3;
+}
+</style>
