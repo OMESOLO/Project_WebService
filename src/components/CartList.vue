@@ -3,14 +3,7 @@
         <Card class="shadow-lg p-4">
             <template #title> รายการตะกร้าสินค้า </template>
             <template #content>
-
-                <!-- ✅ แสดง DataTable เฉพาะเมื่อมีข้อมูล -->
-                <DataTable
-                    v-if="cart.length > 0"
-                    :value="cart"
-                    tableStyle="min-width: 50rem"
-                    responsiveLayout="scroll"
-                >
+                <DataTable v-if="cart.length > 0" :value="cart" tableStyle="min-width: 50rem" responsiveLayout="scroll">
                     <Column field="row_number" header="No." align="center">
                         <template #body="slotProps">
                             {{ slotProps.data.row_number }}
@@ -19,10 +12,7 @@
 
                     <Column field="cartId" header="เลขที่" align="center">
                         <template #body="slotProps">
-                            <router-link
-                                :to="`/cartshow/${slotProps.data.cartId}`"
-                                class="text-primary text-decoration-none"
-                            >
+                            <router-link :to="`/cartshow/${slotProps.data.cartId}`" class="text-primary text-decoration-none">
                                 {{ slotProps.data.cartId }}
                             </router-link>
                         </template>
@@ -47,16 +37,11 @@
                     </Column>
                 </DataTable>
 
-                <!-- ✅ แสดงข้อความเมื่อไม่มีตะกร้า -->
-                <Message v-else severity="info" class="text-center mt-4">
-                    ยังไม่มีรายการตะกร้าสินค้า
-                </Message>
-
+                <Message v-else severity="info" class="text-center mt-4"> ยังไม่มีรายการตะกร้าสินค้า </Message>
             </template>
         </Card>
     </div>
 </template>
-
 
 <script>
 import axios from 'axios';
