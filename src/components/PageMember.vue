@@ -17,11 +17,18 @@
                             <div class="mt-3 w-100">
                                 <div class="mb-3 text-start">
                                     <label for="email" class="form-label">Email</label>
-                                    <InputText id="email" v-model="memEmail" class="form-control" disabled />
+                                    <InputText id="email" v-model="memEmail" class="form-control" :disabled="!isEditing" />
                                 </div>
                                 <div class="mb-3 text-start">
                                     <label for="name" class="form-label">Name</label>
-                                    <InputText id="name" v-model="memName" class="form-control" disabled />
+                                    <InputText id="name" v-model="memName" class="form-control" :disabled="!isEditing" />
+                                </div>
+                                <div class="mb-3 text-end">
+                                    <Button v-if="!isEditing" icon="pi pi-user-edit" label="Edit Profile" severity="info" raised @click="startEditing" />
+                                    <template v-else>
+                                        <Button icon="pi pi-save" label="Save" severity="success" raised @click="updateProfile" class="me-2" />
+                                        <Button icon="pi pi-times" label="Cancel" severity="danger" raised @click="cancelEditing" />
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -34,18 +41,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
-import { useToast } from 'primevue/usetoast';
 import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
+import { onMounted, ref } from 'vue';
+import { EventBus } from '../event-bus';
 
 const toast = useToast();
 const fileInput = ref(null);
 const memEmail = ref(null);
 const memName = ref(null);
+const originalEmail = ref(null);
+const originalName = ref(null);
 const imageTimestamp = ref(Date.now());
+const isEditing = ref(false);
 
 const imageUrl = ref(`http://localhost:3000/img_mem/default.jpg`);
 
@@ -53,16 +64,43 @@ onMounted(() => {
     getCookie();
 });
 
-const getCookie = () => {
+const checkImageExists = async (url) => {
+    try {
+        const response = await fetch(url, { method: 'HEAD' });
+        return response.ok;
+    } catch {
+        return false;
+    }
+};
+
+const getCookie = async () => {
     try {
         const token = Cookies.get('token');
         const decodedToken = jwtDecode(token);
         memEmail.value = decodedToken.memEmail;
         memName.value = decodedToken.memName;
-        imageUrl.value = `http://localhost:3000/img_mem/${memEmail.value}.jpg?timestamp=${imageTimestamp.value}`;
+        originalEmail.value = decodedToken.memEmail;
+        originalName.value = decodedToken.memName;
+
+        const userImageUrl = `http://localhost:3000/img_mem/${memEmail.value}.jpg?timestamp=${imageTimestamp.value}`;
+        const imageExists = await checkImageExists(userImageUrl);
+        
+        imageUrl.value = imageExists ? userImageUrl : `http://localhost:3000/img_mem/default.jpg`;
     } catch (err) {
         console.error(`Fail to decode token: ${err}`);
     }
+};
+
+const startEditing = () => {
+    originalEmail.value = memEmail.value;
+    originalName.value = memName.value;
+    isEditing.value = true;
+};
+
+const cancelEditing = () => {
+    memEmail.value = originalEmail.value;
+    memName.value = originalName.value;
+    isEditing.value = false;
 };
 
 const triggerFileInput = () => {
@@ -87,9 +125,50 @@ const onFileChange = async (event) => {
         imageTimestamp.value = Date.now();
         imageUrl.value = `http://localhost:3000/img_mem/${memEmail.value}.jpg?timestamp=${imageTimestamp.value}`;
 
-        toast.add({ severity: 'success', summary: 'อัปโหลดสำเร็จ', life: 3000 });
+        toast.add({ severity: 'success', summary: 'อัปโหลดสำเร็จ', detail: 'ไฟล์ของคุณถูกอัปโหลดเรียบร้อย', life: 3000 });
     } catch (err) {
-        toast.add({ severity: 'error', summary: 'อัปโหลดล้มเหลว', life: 3000 });
+        toast.add({ severity: 'error', summary: 'อัปโหลดล้มเหลว', detail: 'ไฟล์ของคุณถูกอัปโหลดเรียบร้อย', life: 3000 });
+    }
+};
+
+const updateProfile = async () => {
+    try {
+        const response = await axios.post('http://localhost:3000/members/updateProfile', {
+            memEmail: originalEmail.value,
+            newEmail: memEmail.value,
+            memName: memName.value
+        });
+
+        if (response.data.success) {
+            toast.add({
+                severity: 'success',
+                summary: 'บันทึกข้อมูลสำเร็จ',
+                detail: 'ข้อมูลโปรไฟล์ของคุณได้รับการอัปเดตแล้ว',
+                life: 3000
+            });
+
+            isEditing.value = false;
+
+            // ✅ อัปเดตชื่อแบบเรียลไทม์ใน MainMenu.vue
+            EventBus.emit('updateMemName', memName.value);
+
+            // ✅ อัปเดต email ของตะกร้าใน CartInfo.vue
+            EventBus.emit('updateCartEmail', memEmail.value);
+
+            Cookies.set('token', response.data.newToken, { expires: 1 });
+
+            originalEmail.value = memEmail.value;
+            imageUrl.value = `http://localhost:3000/img_mem/${memEmail.value}.jpg?timestamp=${imageTimestamp.value}`;
+        } else {
+            throw new Error(response.data.message);
+        }
+    } catch (err) {
+        toast.add({
+            severity: 'error',
+            summary: 'เกิดข้อผิดพลาด',
+            detail: err.response?.data?.message || 'ไม่สามารถบันทึกข้อมูลได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง',
+            life: 3000
+        });
     }
 };
 </script>

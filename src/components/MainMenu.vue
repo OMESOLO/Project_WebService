@@ -1,6 +1,6 @@
 <template>
     <Toast />
-    <ConfirmDialog />
+    <ConfirmDialog group="mainMenuDialog"/>
     <Menubar>
         <template #start>
             <span class="menubar-label">Shoes Store</span>
@@ -51,21 +51,26 @@ export default {
         const router = useRouter();
 
         const token = ref(Cookies.get('token') || '');
-        const decodedToken = computed(() => {
+        const decodedToken = ref(null);
+        const isAuthenticated = computed(() => decodedToken.value !== null);
+        const memName = ref('');
+
+        const loadToken = () => {
             try {
-                return token.value ? jwtDecode(token.value) : null;
+                token.value = Cookies.get('token') || '';
+                if (token.value) {
+                    decodedToken.value = jwtDecode(token.value);
+                    memName.value = decodedToken.value.memName;
+                }
             } catch (err) {
                 console.error(`Failed to decode token: ${err}`);
-                return null;
+                decodedToken.value = null;
             }
-        });
-
-        const isAuthenticated = computed(() => decodedToken.value !== null);
-        const memName = computed(() => decodedToken.value?.memName || '');
-        const memEmail = computed(() => decodedToken.value?.memEmail || '');
+        };
 
         const confirmLogout = () => {
             confirm.require({
+                group: 'mainMenuDialog',
                 message: 'คุณต้องการออกจากระบบหรือไม่?',
                 header: 'ยืนยันการออกจากระบบ',
                 icon: 'pi pi-exclamation-triangle',
@@ -80,6 +85,7 @@ export default {
                 await axios.get('http://localhost:3000/members/logout');
                 Cookies.remove('token');
                 token.value = '';
+                decodedToken.value = null;
                 EventBus.emit('memlogout');
                 router.push('/');
                 toast.add({ severity: 'info', summary: 'ออกจากระบบสำเร็จ', detail: 'คุณได้ออกจากระบบแล้ว', life: 3000 });
@@ -89,9 +95,9 @@ export default {
         };
 
         const checkCart = async () => {
-            if (!memEmail.value) return;
+            if (!decodedToken.value?.memEmail) return;
             try {
-                const response = await axios.post('http://localhost:3000/carts/chkcart', { memEmail: memEmail.value });
+                const response = await axios.post('http://localhost:3000/carts/chkcart', { memEmail: decodedToken.value.memEmail });
                 EventBus.emit('cartdtlOK', { id: response.data.cartId });
             } catch (err) {
                 console.error('Check cart error:', err);
@@ -99,13 +105,25 @@ export default {
         };
 
         onMounted(() => {
-            EventBus.on('login_ok', () => {
-                token.value = Cookies.get('token') || '';
-            });
+            loadToken();
             checkCart();
+
+            EventBus.on('updateMemName', (newName) => {
+                console.log('ชื่อที่ได้รับจาก EventBus:', newName);
+                memName.value = newName;
+            });
+
+            EventBus.on('login_ok', () => {
+                loadToken();
+                checkCart();
+            });
+
+            EventBus.on('cart_updated', () => {
+                checkCart();
+            });
         });
 
-        watch(memEmail, checkCart);
+        watch(() => decodedToken.value?.memEmail, checkCart);
 
         return { confirmLogout, isAuthenticated, memName };
     }

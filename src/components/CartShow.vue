@@ -1,5 +1,7 @@
 <template>
     <!-- Master --><!-- ถ้าค่าที่อยู่ใน Cookie กับ CusId ไม่ตรงกันแสดงว่าไม่ใช้ผู้ซื้อไม่มีสิทธิอ่าน -->
+    <Toast />
+    <ConfirmDialog group="cartShowDialog"/>
     <div v-if="memEmail == cusId">
         <div v-for="(ct, cartId) in cart" :key="cartId" class="mt-5">
             <Card class="bg-light">
@@ -47,10 +49,28 @@
 import axios from 'axios';
 import Cookies from 'js-cookie'; //imporo js-cookie มาใช้งาน
 import { jwtDecode } from 'jwt-decode'; //ใช้แทน jsonwebtoken เพราะ jsonwebtoken ไม่เข้ากับ Vue.js
+import ConfirmDialog from 'primevue/confirmdialog';
+import Toast from 'primevue/toast';
+import { useConfirm } from 'primevue/useconfirm';
+import { useToast } from 'primevue/usetoast';
+import { EventBus } from '../event-bus';
 axios.defaults.withCredentials = true;
 
 export default {
     name: 'CartShow',
+    components: {
+        Toast,
+        ConfirmDialog
+    },
+    setup() {
+        const confirm = useConfirm();
+        const toast = useToast();
+
+        return {
+            confirm,
+            toast
+        };
+    },
     data() {
         return {
             cart: [], //รับข้อมูล Master
@@ -110,6 +130,31 @@ export default {
             } catch (err) {
                 console.error(`fail decode token ${err}`);
                 this.decodedToken = null;
+            }
+        },
+
+        confirmDelete(cartId) {
+            this.confirm.require({
+                group: 'cartShowDialog',
+                message: 'คุณต้องการลบตะกร้าสินค้านี้ใช่หรือไม่?',
+                header: 'ยืนยันการลบ',
+                icon: 'pi pi-exclamation-triangle',
+                rejectProps: { label: 'ยกเลิก', severity: 'secondary', outlined: true },
+                acceptProps: { label: 'ลบตะกร้า', severity: 'danger' },
+                accept: () => this.deleteCart(cartId)
+            });
+        },
+
+        async deleteCart(cartId) {
+            try {
+                await axios.delete(`http://localhost:3000/carts/delete/${cartId}`);
+                this.cart = this.cart.filter((ct) => ct.cartId !== cartId);
+                this.cartDtl = [];
+                EventBus.emit('cart_updated');
+                this.toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'ลบตะกร้าสินค้าเรียบร้อยแล้ว', life: 3000 });
+            } catch (err) {
+                console.error('ลบตะกร้าไม่สำเร็จ', err);
+                this.toast.add({ severity: 'error', summary: 'เกิดข้อผิดพลาด', detail: 'ไม่สามารถลบตะกร้าสินค้าได้', life: 3000 });
             }
         }
     }
