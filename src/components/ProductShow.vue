@@ -158,6 +158,7 @@ const addCartDtl = async () => {
         });
 
         EventBus.emit('cartdtlOK', { id: cartId.value });
+        EventBus.emit('cart_updated');
     } catch (err) {
         console.log(err);
     }

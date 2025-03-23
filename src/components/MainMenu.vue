@@ -1,6 +1,6 @@
 <template>
     <Toast />
-    <ConfirmDialog group="mainMenuDialog"/>
+    <ConfirmDialog group="mainMenuDialog" />
     <Menubar>
         <template #start>
             <span class="menubar-label">Shoes Store</span>
@@ -14,12 +14,12 @@
         <template #end>
             <div class="d-flex align-items-center">
                 <router-link v-if="isAuthenticated" to="/cartlist" class="p-menubar-item-link">
-                    <Button label="ShowCart" icon="pi pi-shopping-cart" text />
+                    <Button label="ShowCart" icon="pi pi-shopping-cart" text :badge="cartQty > 0 ? cartQty.toString() : null" badgeClass="p-badge-success" />
                 </router-link>
 
-                <div v-if="isAuthenticated" class="p-menubar-end-item pe-3">
+                <!-- <div v-if="isAuthenticated" class="p-menubar-end-item pe-3">
                     <Cartinfo />
-                </div>
+                </div> -->
                 <Button v-if="isAuthenticated" label="ลงชื่อออก" icon="pi pi-sign-out" text severity="danger" @click="confirmLogout" />
                 <router-link v-else to="/login" class="p-menubar-item-link">
                     <Button label="Login" icon="pi pi-sign-in" text />
@@ -40,16 +40,16 @@ import { useToast } from 'primevue/usetoast';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { EventBus } from '../event-bus';
-import Cartinfo from './Cartinfo.vue';
+// import Cartinfo from './Cartinfo.vue';
 
 export default {
     name: 'MainMenu',
-    components: { Cartinfo, Toast, ConfirmDialog },
+    components: { Toast, ConfirmDialog },
     setup() {
         const confirm = useConfirm();
         const toast = useToast();
         const router = useRouter();
-
+        const cartQty = ref(0);
         const token = ref(Cookies.get('token') || '');
         const decodedToken = ref(null);
         const isAuthenticated = computed(() => decodedToken.value !== null);
@@ -98,7 +98,12 @@ export default {
             if (!decodedToken.value?.memEmail) return;
             try {
                 const response = await axios.post('http://localhost:3000/carts/chkcart', { memEmail: decodedToken.value.memEmail });
-                EventBus.emit('cartdtlOK', { id: response.data.cartId });
+                // EventBus.emit('cartdtlOK', { id: response.data.cartId });
+                const cartId = response.data.cartId;
+                if (cartId) {
+                    const sumRes = await axios.get(`http://localhost:3000/carts/sumcart/${cartId}`);
+                    cartQty.value = sumRes.data.qty;
+                }
             } catch (err) {
                 console.error('Check cart error:', err);
             }
@@ -121,11 +126,15 @@ export default {
             EventBus.on('cart_updated', () => {
                 checkCart();
             });
+
+            EventBus.on('cart_cleared', () => {
+                cartQty.value = 0;
+            });
         });
 
         watch(() => decodedToken.value?.memEmail, checkCart);
 
-        return { confirmLogout, isAuthenticated, memName };
+        return { confirmLogout, isAuthenticated, memName, cartQty };
     }
 };
 </script>

@@ -1,7 +1,8 @@
 <template>
     <!-- Master --><!-- ถ้าค่าที่อยู่ใน Cookie กับ CusId ไม่ตรงกันแสดงว่าไม่ใช้ผู้ซื้อไม่มีสิทธิอ่าน -->
     <Toast />
-    <ConfirmDialog group="cartShowDialog"/>
+    <ConfirmDialog group="cartShowDialog" />
+
     <div v-if="memEmail == cusId">
         <div v-for="(ct, cartId) in cart" :key="cartId" class="mt-5">
             <Card class="bg-light">
@@ -19,29 +20,25 @@
                 </template>
             </Card>
         </div>
-        <!---v for  -->
 
-        <!-- Detail -->
-        <DataTable :value="cartDtl" stripedRows tableStyle="min-width: 50rem" class="table mt-5">
-            <Column field="row_number" header="No."></Column>
-            <Column field="pdId" header="รหัสสินค้า"></Column>
-            <Column field="pdName" header="สินค้า"></Column>
-            <Column field="price" header="ราคาต่อหน่วย">
-                <template #body="slotProps">
-                    {{ slotProps.data.price.toLocaleString() }}
-                </template>
-            </Column>
-            <Column field="qty" header="จำนวน"></Column>
-            <Column field="totalPrice" header="เป็นเงิน">
-                <template #body="slotProps">
-                    {{ (slotProps.data.price * slotProps.data.qty ?? 0).toLocaleString() }}
-                </template>
-            </Column>
-        </DataTable>
-    </div>
-    <!--v-if-->
-    <div v-else>
-        <Message severity="error" class="mt-5">คุณไม่มีสิทธิ์ดูรายการนี้</Message>
+        <div v-if="cartDtl.length > 0">
+            <DataTable :value="cartDtl" stripedRows tableStyle="min-width: 50rem" class="table mt-5">
+                <Column field="row_number" header="No." />
+                <Column field="pdId" header="รหัสสินค้า" />
+                <Column field="pdName" header="สินค้า" />
+                <Column field="price" header="ราคาต่อหน่วย">
+                    <template #body="slotProps">
+                        {{ slotProps.data.price.toLocaleString() }}
+                    </template>
+                </Column>
+                <Column field="qty" header="จำนวน" />
+                <Column field="totalPrice" header="เป็นเงิน">
+                    <template #body="slotProps">
+                        {{ (slotProps.data.price * slotProps.data.qty ?? 0).toLocaleString() }}
+                    </template>
+                </Column>
+            </DataTable>
+        </div>
     </div>
 </template>
 
@@ -108,6 +105,7 @@ export default {
                 })
                 .catch((err) => {
                     console.error(err);
+                    this.noDataFound = true;
                 });
         },
         async getCartDtl() {
@@ -116,10 +114,11 @@ export default {
                 .get(`http://localhost:3000/carts/getcartdtl/${this.cartId}`)
                 .then((res) => {
                     console.log('CartDtl \n' + res.data);
-                    this.cartDtl = res.data;
+                    this.cartDtl = Array.isArray(res.data) ? res.data : [];
                 })
                 .catch((err) => {
                     console.error(err);
+                    this.cartDtl = [];
                 });
         },
         getCookie() {
@@ -151,7 +150,9 @@ export default {
                 this.cart = this.cart.filter((ct) => ct.cartId !== cartId);
                 this.cartDtl = [];
                 EventBus.emit('cart_updated');
+                EventBus.emit('cart_cleared');
                 this.toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'ลบตะกร้าสินค้าเรียบร้อยแล้ว', life: 3000 });
+                this.$router.push('/cartlist');
             } catch (err) {
                 console.error('ลบตะกร้าไม่สำเร็จ', err);
                 this.toast.add({ severity: 'error', summary: 'เกิดข้อผิดพลาด', detail: 'ไม่สามารถลบตะกร้าสินค้าได้', life: 3000 });
