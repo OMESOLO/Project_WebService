@@ -35,6 +35,12 @@
                             {{ (slotProps.data.sprice ?? 0).toLocaleString() }}
                         </template>
                     </Column>
+
+                    <Column header="สถานะ" align="center">
+                        <template #body="slotProps">
+                            <Tag :value="slotProps.data.cartCf === true ? 'ยืนยันแล้ว' : 'ยังไม่ยืนยัน'" :severity="slotProps.data.cartCf === true ? 'success' : 'warning'" />
+                        </template>
+                    </Column>
                 </DataTable>
 
                 <Message v-else severity="info" class="text-center mt-4"> ยังไม่มีรายการตะกร้าสินค้า </Message>
@@ -47,9 +53,13 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
+import Tag from 'primevue/tag';
 
 export default {
     name: 'CartList',
+    components: {
+        Tag
+    },
     data() {
         return {
             memEmail: null,

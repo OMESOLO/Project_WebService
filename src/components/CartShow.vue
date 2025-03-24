@@ -144,6 +144,19 @@ export default {
             });
         },
 
+        async confirmOrder(cartId) {
+            try {
+                const response = await axios.put(`http://localhost:3000/carts/confirmorder/${cartId}`);
+                this.toast.add({ severity: 'success', summary: 'ยืนยันคำสั่งซื้อแล้ว', detail: 'ระบบได้ยืนยันคำสั่งซื้อของคุณเรียบร้อย', life: 3000 });
+
+                // อัปเดต UI หรือเปลี่ยนหน้าไปที่รายการคำสั่งซื้อ
+                this.$router.push('/cartlist'); // หรือจะ reload cart ใหม่ก็ได้
+            } catch (err) {
+                console.error('ยืนยันคำสั่งซื้อไม่สำเร็จ', err);
+                this.toast.add({ severity: 'error', summary: 'เกิดข้อผิดพลาด', detail: 'ไม่สามารถยืนยันคำสั่งซื้อได้', life: 3000 });
+            }
+        },
+
         async deleteCart(cartId) {
             try {
                 await axios.delete(`http://localhost:3000/carts/delete/${cartId}`);
