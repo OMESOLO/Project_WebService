@@ -13,6 +13,9 @@
         </template>
         <template #end>
             <div class="d-flex align-items-center">
+                <router-link to="/product/create" class="p-menubar-item-link">
+                    <Button label="เพิ่มสินค้า" icon="pi pi-plus" text severity="info" />
+                </router-link>
                 <router-link v-if="isAuthenticated" to="/cartlist" class="p-menubar-item-link">
                     <Button label="ShowCart" icon="pi pi-shopping-cart" text :badge="cartQty > 0 ? cartQty.toString() : null" badgeClass="p-badge-success" />
                 </router-link>

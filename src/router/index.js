@@ -1,14 +1,16 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import TheLogin from '@/components/TheLogin.vue';
-import TheHome from '@/components/TheHome.vue';
-import TheRegister from '@/components/TheRegister.vue';
+import CartList from '@/components/CartList.vue';
+import CartShow from '@/components/CartShow.vue';
 import PageMember from '@/components/PageMember.vue';
 import ProductShow from '@/components/ProductShow.vue';
-import CartShow from '@/components/CartShow.vue';
-import CartList from '@/components/CartList.vue';
+import TheHome from '@/components/TheHome.vue';
+import TheLogin from '@/components/TheLogin.vue';
+import TheRegister from '@/components/TheRegister.vue';
+import ProductCreate from '@/components/ProductCreate.vue';
+import { createRouter, createWebHistory } from 'vue-router';
+
 const routes = [
     {
-        patch: '/',
+        path: '/',
         name: 'Home',
         component: TheHome
     },
@@ -41,6 +43,11 @@ const routes = [
         path: '/cartList/',
         name: 'CartList',
         component: CartList
+    },
+    {
+        path: '/product/create',
+        name: 'ProductCreate',
+        component: ProductCreate
     }
 ];
 
