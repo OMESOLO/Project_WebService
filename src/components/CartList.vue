@@ -38,7 +38,7 @@
 
                     <Column header="สถานะ" align="center">
                         <template #body="slotProps">
-                            <Tag :value="slotProps.data.cartCf === true ? 'ยืนยันแล้ว' : 'ยังไม่ยืนยัน'" :severity="slotProps.data.cartCf === true ? 'success' : 'warning'" />
+                            <Tag :value="getStatusText(slotProps.data.cartCf)" :severity="getStatusColor(slotProps.data.cartCf)" />
                         </template>
                     </Column>
                 </DataTable>
@@ -99,6 +99,13 @@ export default {
                 console.error(`Fail to decode token: ${err}`);
                 this.decodedToken = null;
             }
+        },
+
+        getStatusText(status) {
+            return status === true ? 'ยืนยันแล้ว' : 'ยังไม่ยืนยัน';
+        },
+        getStatusColor(status) {
+            return status === true ? 'success' : 'warning';
         }
     }
 };

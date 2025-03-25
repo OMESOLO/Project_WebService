@@ -13,7 +13,7 @@
                     <h5 class="mt-2 text-muted">สั่งซื้อวันที่ {{ formattedDate(ct.cartDate) }}</h5>
                     <div class="text-danger text-end">จำนวนสินค้า {{ ct.sqty }} ชิ้น, ยอดเงิน {{ (ct.sprice ?? 0).toLocaleString() }} บาท</div>
                     <hr />
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between" v-if="!ct.cartCf">
                         <Button icon="pi pi-trash" label="ลบตะกร้าสินค้า" severity="danger" raised @click="confirmDelete(ct.cartId)" />
                         <Button icon="pi pi-dollar" label="ยืนยันสั่งสินค้า" severity="success" raised @click="confirmOrder(ct.cartId)" />
                     </div>
@@ -148,7 +148,9 @@ export default {
             try {
                 const response = await axios.put(`http://localhost:3000/carts/confirmorder/${cartId}`);
                 this.toast.add({ severity: 'success', summary: 'ยืนยันคำสั่งซื้อแล้ว', detail: 'ระบบได้ยืนยันคำสั่งซื้อของคุณเรียบร้อย', life: 3000 });
-
+                await this.getCart();
+                EventBus.emit('cart_cleared');
+                await this.getCart();
                 // อัปเดต UI หรือเปลี่ยนหน้าไปที่รายการคำสั่งซื้อ
                 this.$router.push('/cartlist'); // หรือจะ reload cart ใหม่ก็ได้
             } catch (err) {

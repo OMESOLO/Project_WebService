@@ -13,7 +13,7 @@
         </template>
         <template #end>
             <div class="d-flex align-items-center">
-                <router-link to="/product/create" class="p-menubar-item-link">
+                <router-link v-if="isAdmin" to="/product/create" class="p-menubar-item-link">
                     <Button label="เพิ่มสินค้า" icon="pi pi-plus" text severity="info" />
                 </router-link>
                 <router-link v-if="isAuthenticated" to="/cartlist" class="p-menubar-item-link">
@@ -43,7 +43,6 @@ import { useToast } from 'primevue/usetoast';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { EventBus } from '../event-bus';
-// import Cartinfo from './Cartinfo.vue';
 
 export default {
     name: 'MainMenu',
@@ -57,6 +56,8 @@ export default {
         const decodedToken = ref(null);
         const isAuthenticated = computed(() => decodedToken.value !== null);
         const memName = ref('');
+        const dutyId = ref('');
+        const isAdmin = computed(() => decodedToken.value?.dutyId === 'admin');
 
         const loadToken = () => {
             try {
@@ -64,6 +65,7 @@ export default {
                 if (token.value) {
                     decodedToken.value = jwtDecode(token.value);
                     memName.value = decodedToken.value.memName;
+                    dutyId.value = decodedToken.value.dutyId;
                 }
             } catch (err) {
                 console.error(`Failed to decode token: ${err}`);
@@ -137,7 +139,7 @@ export default {
 
         watch(() => decodedToken.value?.memEmail, checkCart);
 
-        return { confirmLogout, isAuthenticated, memName, cartQty };
+        return { confirmLogout, isAuthenticated, memName, cartQty, isAdmin };
     }
 };
 </script>

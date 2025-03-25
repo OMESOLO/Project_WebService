@@ -52,7 +52,7 @@
                                     <InputText v-model="data[field]" />
                                 </template>
                             </Column>
-                            <Column :rowEditor="true" style="width: 10%; min-width: 8rem" bodyStyle="text-align:center"> </Column>
+                            <Column v-if="isAdmin" :rowEditor="true" style="width: 10%; min-width: 8rem" bodyStyle="text-align:center"> </Column>
                         </DataTable>
                     </template>
                 </Card>
@@ -70,7 +70,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import { useToast } from 'primevue/usetoast';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { EventBus } from '../event-bus';
 
 const toast = useToast();
@@ -81,8 +81,11 @@ const decodedToken = ref(null);
 const memEmail = ref(null);
 const cartId = ref(null);
 const editingRows = ref([]);
+const dutyId = ref('');
+const isAdmin = computed(() => dutyId.value === 'admin');
 
 onMounted(async () => {
+    await getCookie();
     id.value = window.location.pathname.split('/').pop();
     try {
         const res = await axios.get(`http://localhost:3000/products/${id.value}`);
@@ -104,6 +107,7 @@ const getCookie = async () => {
         token.value = await Cookies.get('token');
         decodedToken.value = jwtDecode(token.value);
         memEmail.value = decodedToken.value.memEmail;
+        dutyId.value = decodedToken.value.dutyId;
     } catch (err) {
         console.error(`fail decode token ${err}`);
     }
