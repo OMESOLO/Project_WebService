@@ -1,42 +1,39 @@
 <template>
-    <div class="row d-flex justify-content-center">
+    <div class="register-wrapper d-flex justify-content-center mt-4">
         <div class="col-lg-6 col-md-8 col-sm-12">
             <Toast />
             <form @submit.prevent="handleSubmit()">
-                <div class="card row mt-5" style="background-color: #eeffee">
+                <div class="card shadow-lg rounded-4 border-0 p-4 bg-white">
                     <div class="card-body">
-                        <h1 class="card-title text-secondary">ลงทะเบียนสมาชิกใหม่</h1>
-                        <div class="col-lg-12 mb-3">
-                            <div class="form-floating mb-3">
-                                <IftaLabel>
-                                    <InputText type="text" class="form-control" id="memEmail" autocomplete="off" v-model.trim="memEmail" />
-                                    <label for="memEmail">Email</label>
-                                </IftaLabel>
+                        <h2 class="text-center text-primary mb-4">ลงทะเบียนสมาชิกใหม่</h2>
+
+                        <div class="mb-3">
+                            <label for="memEmail" class="form-label fw-semibold">Email</label>
+                            <div class="input-group">
+                                <InputText type="text" class="form-control" id="memEmail" autocomplete="off" v-model.trim="memEmail" />
                             </div>
                         </div>
-                        <div class="col-lg-12 mb-3">
-                            <div class="form-floating mb-3">
-                                <IftaLabel>
-                                    <InputText type="text" class="form-control" id="memName" autocomplete="off" v-model.trim="memName" />
-                                    <label for="memName">Name</label>
-                                </IftaLabel>
+
+                        <div class="mb-3">
+                            <label for="memName" class="form-label fw-semibold">Name</label>
+                            <div class="input-group">
+                                <InputText type="text" class="form-control" id="memName" autocomplete="off" v-model.trim="memName" />
                             </div>
                         </div>
-                        <div class="col-lg-12 mb-3">
-                            <div class="form-floating mb-3">
-                                <IftaLabel>
-                                    <Password id="password" v-model.trim="password" toggleMask style="width: 100%" inputClass="w-100" />
-                                    <label for="password">Password</label>
-                                </IftaLabel>
+
+                        <div class="mb-4">
+                            <label for="password" class="form-label fw-semibold">Password</label>
+                            <div class="input-group">
+                                <Password id="password" v-model.trim="password" toggleMask inputClass="form-control" class="w-100" :feedback="(ti = true)" />
                             </div>
                         </div>
-                        <div class="col-sm-12">
-                            <Button type="submit" label="ลงทะเบียน" icon="pi pi-check" class="p-button-primary float-end" />
+
+                        <div class="text-end">
+                            <Button type="submit" label="ลงทะเบียน" icon="pi pi-check" severity="success" />
                         </div>
                     </div>
                 </div>
             </form>
-           
         </div>
     </div>
 </template>
@@ -50,8 +47,8 @@ export default {
             memEmail: null,
             memName: null,
             password: null,
-            regist: null, //อ่านค่าว่าลงทะเบียนสำเร็จหรือไม่
-            backendmessage: null //อ่านข้อความที่ส่งมาจาก Backend
+            regist: null, 
+            backendmessage: null 
         };
     },
     methods: {
@@ -91,3 +88,5 @@ export default {
     }
 };
 </script>
+
+<style scoped></style>

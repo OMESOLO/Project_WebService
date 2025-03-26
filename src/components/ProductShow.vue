@@ -57,8 +57,13 @@
                     </template>
                 </Card>
 
-                <div class="mt-3">
-                    <Button label="ใส่ตะกร้า" icon="pi pi-shopping-cart" class="p-button-primary" @click="chkLogin()" />
+                <div class="mt-3 d-flex justify-content-between">
+                    <div>
+                        <Button label="ใส่ตะกร้า" icon="pi pi-shopping-cart" severity="success" @click="chkLogin()" />
+                    </div>
+                    <div>
+                        <Button v-if="isAdmin" label="ลบสินค้า" icon="pi pi-trash" severity="danger" @click="confirmDelete(pd.pdId)" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -72,6 +77,8 @@ import { jwtDecode } from 'jwt-decode';
 import { useToast } from 'primevue/usetoast';
 import { computed, onMounted, ref } from 'vue';
 import { EventBus } from '../event-bus';
+import { useRouter } from 'vue-router';
+import { useConfirm } from 'primevue/useconfirm';
 
 const toast = useToast();
 const products = ref([]);
@@ -83,6 +90,8 @@ const cartId = ref(null);
 const editingRows = ref([]);
 const dutyId = ref('');
 const isAdmin = computed(() => dutyId.value === 'admin');
+const router = useRouter();
+const confirm = useConfirm();
 
 onMounted(async () => {
     await getCookie();
@@ -196,6 +205,42 @@ const updateProduct = async (updatedProduct) => {
             life: 3000
         });
     }
+};
+
+const deleteProduct = async (pdId) => {
+    try {
+        await axios.delete(`http://localhost:3000/products/${pdId}`);
+
+        products.value = products.value.filter((pd) => pd.pdId !== pdId);
+
+        toast.add({
+            severity: 'success',
+            summary: 'ลบสำเร็จ',
+            detail: 'ลบสินค้าออกจากระบบเรียบร้อย',
+            life: 3000
+        });
+        router.push('/');
+    } catch (err) {
+        console.error('Error deleting product:', err);
+        toast.add({
+            severity: 'error',
+            summary: 'ลบไม่สำเร็จ',
+            detail: 'เกิดข้อผิดพลาดในการลบสินค้า',
+            life: 3000
+        });
+    }
+};
+
+const confirmDelete = (pdId) => {
+    confirm.require({
+        group: 'mainMenuDialog',
+        message: 'คุณแน่ใจหรือไม่ว่าต้องการลบสินค้านี้?',
+        header: 'ยืนยันการลบสินค้า',
+        icon: 'pi pi-exclamation-triangle',
+        rejectProps: { label: 'ยกเลิก', severity: 'secondary', outlined: true },
+        acceptProps: { label: 'ลบสินค้า', severity: 'danger' },
+        accept: () => deleteProduct(pdId)
+    });
 };
 
 const onRowEditSave = (event) => {

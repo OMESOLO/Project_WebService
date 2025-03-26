@@ -19,10 +19,7 @@
                 <router-link v-if="isAuthenticated" to="/cartlist" class="p-menubar-item-link">
                     <Button label="ShowCart" icon="pi pi-shopping-cart" text :badge="cartQty > 0 ? cartQty.toString() : null" badgeClass="p-badge-success" />
                 </router-link>
-
-                <!-- <div v-if="isAuthenticated" class="p-menubar-end-item pe-3">
-                    <Cartinfo />
-                </div> -->
+                
                 <Button v-if="isAuthenticated" label="ลงชื่อออก" icon="pi pi-sign-out" text severity="danger" @click="confirmLogout" />
                 <router-link v-else to="/login" class="p-menubar-item-link">
                     <Button label="Login" icon="pi pi-sign-in" text />

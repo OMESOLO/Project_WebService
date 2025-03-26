@@ -1,38 +1,33 @@
 <template>
-    <div class="row mt-5">
+    <div class="container mt-5">
         <Toast />
-        <div class="col-sm-12 col-md-6 col-lg-6 mb-5">
-            <Image src="https://primefaces.org/cdn/primevue/images/galleria/galleria10.jpg" alt="Image" width="250" />
-        </div>
-        <div class="col-sm-12 col-md-6 col-lg-6 mb3">
-            <form @submit.prevent="handleSubmit()">
-                <div class="col-sm-12 col-md-10 col-lg-8">
-                    <div class="form-floating mb-3">
-                        <IftaLabel>
+        <div class="row justify-content-center align-items-center">
+            <div class="col-12 col-md-6">
+                <form @submit.prevent="handleSubmit()" class="p-5 shadow rounded-4 bg-white">
+                    <h4 class="mb-4 text-center text-primary">เข้าสู่ระบบ</h4>
+
+                    <div class="mb-4">
+                        <label for="loginname" class="form-label fw-semibold">Email</label>
+                        <div class="input-group shadow-sm rounded">
                             <InputText id="loginname" v-model="loginname" style="width: 105%" variant="filled" />
-                            <label for="loginname">Email</label>
-                        </IftaLabel>
+                        </div>
                     </div>
-                </div>
-                <div class="col-sm-12 col-md-10 col-lg-8">
-                    <div class="form-floating mb-3">
-                        <IftaLabel>
+
+                    <div class="mb-4">
+                        <label for="password" class="form-label fw-semibold">Password</label>
+                        <div class="input-group shadow-sm rounded">
                             <Password id="password" v-model="password" toggleMask :feedback="false" style="width: 105%" inputClass="w-100" />
-                            <label for="password">Password</label>
-                        </IftaLabel>
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-sm-12 col-md-6 mb-3">
+
+                    <div class="d-flex justify-content-between">
                         <router-link to="/register" style="text-decoration: none">
                             <Button label="สมัครสมาชิก" icon="pi pi-user-plus" severity="danger" outlined />
                         </router-link>
+                        <Button label="เข้าสู่ระบบ" icon="pi pi-sign-in" severity="success" type="submit" class="ml-2" />
                     </div>
-                    <div class="col-sm-12 col-md-6">
-                        <Button label="เข้าสู่ระบบ" icon="pi pi-sign-in" type="submit" class="w-24" />
-                    </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 </template>
@@ -94,7 +89,6 @@ export default {
             } catch (err) {
                 console.log(err);
 
-                // ✅ Toast แจ้งเตือนเมื่อเกิดข้อผิดพลาด
                 this.toast.add({
                     severity: 'error',
                     summary: 'เกิดข้อผิดพลาด',

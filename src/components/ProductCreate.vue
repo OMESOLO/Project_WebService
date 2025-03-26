@@ -42,7 +42,7 @@
                                 </FileUpload>
                             </div>
 
-                            <Button type="submit" label="บันทึกสินค้า" icon="pi pi-save" class="float-end mt-2" />
+                            <Button type="submit" label="บันทึกสินค้า" icon="pi pi-save" severity="success" class="float-end mt-2" />
                         </form>
                     </template>
                 </Card>
