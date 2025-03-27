@@ -1,11 +1,12 @@
 import CartList from '@/components/CartList.vue';
 import CartShow from '@/components/CartShow.vue';
 import PageMember from '@/components/PageMember.vue';
+import ProductCreate from '@/components/ProductCreate.vue';
 import ProductShow from '@/components/ProductShow.vue';
 import TheHome from '@/components/TheHome.vue';
 import TheLogin from '@/components/TheLogin.vue';
 import TheRegister from '@/components/TheRegister.vue';
-import ProductCreate from '@/components/ProductCreate.vue';
+import ApiDoc from '@/components/ApiDoc.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 
 const routes = [
@@ -48,6 +49,11 @@ const routes = [
         path: '/product/create',
         name: 'ProductCreate',
         component: ProductCreate
+    },
+    {
+        path: '/apidoc',
+        name: 'ApiDoc',
+        component: ApiDoc
     }
 ];
 
