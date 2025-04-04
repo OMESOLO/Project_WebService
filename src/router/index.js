@@ -6,7 +6,6 @@ import ProductShow from '@/components/ProductShow.vue';
 import TheHome from '@/components/TheHome.vue';
 import TheLogin from '@/components/TheLogin.vue';
 import TheRegister from '@/components/TheRegister.vue';
-import ApiDoc from '@/components/ApiDoc.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 
 const routes = [
@@ -50,11 +49,6 @@ const routes = [
         name: 'ProductCreate',
         component: ProductCreate
     },
-    {
-        path: '/apidoc',
-        name: 'ApiDoc',
-        component: ApiDoc
-    }
 ];
 
 const router = createRouter({

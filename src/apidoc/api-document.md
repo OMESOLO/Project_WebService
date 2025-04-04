@@ -1,5 +1,0 @@
-# 📘 API Documentation
-
-## 🔐 Authentication
-
-**Header:**

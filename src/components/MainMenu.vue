@@ -20,10 +20,6 @@
                     <Button label="ShowCart" icon="pi pi-shopping-cart" text :badge="cartQty > 0 ? cartQty.toString() : null" badgeClass="p-badge-success" />
                 </router-link>
 
-                <router-link to="/apidoc" class="p-menubar-item-link">
-                    <Button label="API Document" icon="pi pi-book" text severity="help" />
-                </router-link>
-
                 <Button v-if="isAuthenticated" label="ลงชื่อออก" icon="pi pi-sign-out" text severity="danger" @click="confirmLogout" />
                 <router-link v-else to="/login" class="p-menubar-item-link">
                     <Button label="Login" icon="pi pi-sign-in" text />
